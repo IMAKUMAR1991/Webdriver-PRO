@@ -1,8 +1,12 @@
 package Selenium;
+
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -10,58 +14,40 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 
 public class BrokenLinks {
 
-	public static void main(String[] args) throws InterruptedException {
-		//Instantiating FirefoxDriver
-		//System.setProperty("webdriver.gecko.driver", "D:\\Selenium Environment\\Drivers\\geckodriver.exe");
+	public static void main(String[] args) {
+		String url;
 		WebDriver driver = new FirefoxDriver();
-		//Maximize the browser
 		driver.manage().window().maximize();
-		//Implicit wait for 10 seconds
-		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-		//To launch softwaretestingmaterial.com
-		driver.get("https://www.softwaretestingmaterial.com");
-		//Wait for 5 seconds
-		Thread.sleep(5000);
-		//Used tagName method to collect the list of items with tagName "a"
-		//findElements - to find all the elements with in the current page. It returns a list of all webelements or an empty list if nothing matches
-		List<WebElement> links = driver.findElements(By.tagName("a"));	
-		//To print the total number of links
-		System.out.println("Total links are "+links.size());	
-		//used for loop to 
-		for(int i=0; i<links.size(); i++) {
-			WebElement element = links.get(i);
-			//By using "href" attribute, we could get the url of the requried link
-			String url=element.getAttribute("href");
-			//calling verifyLink() method here. Passing the parameter as url which we collected in the above link
-			//See the detailed functionality of the verifyLink(url) method below
-			verifyLink(url);			
-		}	
-	}
-	
-	// The below function verifyLink(String urlLink) verifies any broken links and return the server status. 
-	public static void verifyLink(String urlLink) {
-        //Sometimes we may face exception "java.net.MalformedURLException". Keep the code in try catch block to continue the broken link analysis
-        try {
-			//Use URL Class - Create object of the URL Class and pass the urlLink as parameter 
-			URL link = new URL(urlLink);
-			// Create a connection using URL object (i.e., link)
-			HttpURLConnection httpConn =(HttpURLConnection)link.openConnection();
-			//Set the timeout for 2 seconds
-			httpConn.setConnectTimeout(2000);
-			//connect using connect method
-			httpConn.connect();
-			//use getResponseCode() to get the response code. 
-				if(httpConn.getResponseCode()== 200) {	
-					System.out.println(urlLink+" - "+httpConn.getResponseMessage());
-				}
-				if(httpConn.getResponseCode()== 404) {
-					System.out.println(urlLink+" - "+httpConn.getResponseMessage());
-				}
-			}
-			//getResponseCode method returns = IOException - if an error occurred connecting to the server. 
-		catch (Exception e) {
-			//e.printStackTrace();
-		}
-    } 
+		driver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS);
+		driver.manage().timeouts().pageLoadTimeout(20, TimeUnit.SECONDS);
+		driver.get("http://toolsqa.com/selenium-webdriver/implicit-explicit-n-fluent-wait/");
+		List<WebElement> tag = driver.findElements(By.tagName("a"));
+		System.out.println(tag.size());
+		Iterator<WebElement> it = tag.iterator();
+		while (it.hasNext()) {
+			url = it.next().getAttribute("href");
+			URL link;
+			try {
+				link = new URL(url);
 
+				HttpURLConnection htp = (HttpURLConnection) link.openConnection();
+				htp.setConnectTimeout(2000);
+				// htp.setRequestMethod("HEAD");
+				htp.connect();
+				int resopnseCode = htp.getResponseCode();
+				if (resopnseCode >= 400) {
+					System.out.println(url + "  broken links" + htp.getResponseMessage());
+
+				} else {
+					System.out.println(url + "valid link" + htp.getResponseMessage());
+				}
+
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				//e.printStackTrace();
+			}
+
+		}
+
+	}
 }
